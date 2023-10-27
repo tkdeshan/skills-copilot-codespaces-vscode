@@ -1,52 +1,59 @@
-// Create web browser
-
-// Require modules
+// Create web server
 var express = require('express');
 var router = express.Router();
+
+// Import mongoose
 var mongoose = require('mongoose');
+
+// Import model
 var Comment = require('../models/Comment.js');
-var passport = require('passport');
 
-// Get all comments
+// GET /comments
+// GET /comments?post=post_id
 router.get('/', function(req, res, next) {
-  Comment.find(function (err, comments) {
+  if (req.query.post) {
+    Comment.find({post: req.query.post}, function(err, comments) {
+      if (err) return next(err);
+      res.json(comments);
+    });
+  } else {
+    Comment.find(function(err, comments) {
+      if (err) return next(err);
+      res.json(comments);
+    });
+  }
+});
+
+// POST /comments
+router.post('/', function(req, res, next) {
+  Comment.create(req.body, function(err, comment) {
     if (err) return next(err);
-    res.json(comments);
+    res.json(comment);
   });
 });
 
-// Get comment by id
+// GET /comments/:id
 router.get('/:id', function(req, res, next) {
-  Comment.findById(req.params.id, function (err, comment) {
+  Comment.findById(req.params.id, function(err, comment) {
     if (err) return next(err);
     res.json(comment);
   });
 });
 
-// Create comment
-router.post('/', passport.authenticate('jwt', { session: false}), function(req, res, next) {
-  Comment.create(req.body, function (err, comment) {
+// PUT /comments/:id
+router.put('/:id', function(req, res, next) {
+  Comment.findByIdAndUpdate(req.params.id, req.body, function(err, comment) {
     if (err) return next(err);
     res.json(comment);
   });
 });
 
-// Update comment
-router.put('/:id', passport.authenticate('jwt', { session: false}), function(req, res, next) {
-  Comment.findByIdAndUpdate(req.params.id, req.body, function (err, comment) {
+// DELETE /comments/:id
+router.delete('/:id', function(req, res, next) {
+  Comment.findByIdAndRemove(req.params.id, req.body, function(err, comment) {
     if (err) return next(err);
     res.json(comment);
   });
 });
 
-// Delete comment
-router.delete('/:id', passport.authenticate('jwt', { session: false}), function(req, res, next) {
-  Comment.findByIdAndRemove(req.params.id, req.body, function (err, comment) {
-    if (err) return next(err);
-    res.json(comment);
-  });
-});
-
-// Export module
 module.exports = router;
-
